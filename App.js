@@ -1,57 +1,89 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
 import React, { Component } from 'react';
 import {
-  Platform,
+  AppRegistry,
   StyleSheet,
   Text,
-  View
+  View,
+  TouchableHighlight,
+  Vibration,
+  TextInput,
+  Button,
+  AppState
 } from 'react-native';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+import { Timer } from 'react-native-stopwatch-timer';
 
-export default class App extends Component<{}> {
+export default class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      timerStart: false,
+      totalDuration: 9000,
+      timerReset: false,
+      text: 0,
+      act: true
+    };
+
+    this.toggleTimer = this.toggleTimer.bind(this);
+    this.resetTimer = this.resetTimer.bind(this);
+  }
+
+  toggleTimer() {
+    this.setState({ timerStart: !this.state.timerStart, timerReset: false });
+  }
+
+  resetTimer() {
+    this.setState({ timerStart: false, timerReset: true });
+  }
+
+  getFormattedTime(time) {
+    this.currentTime = time;
+  }
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit App.js
-        </Text>
-        <Text style={styles.instructions}>
-          {instructions}
-        </Text>
+        <Timer
+          totalDuration={this.state.totalDuration}
+          msecs
+          start={this.state.timerStart}
+          reset={this.state.timerReset}
+          options={options}
+          handleFinish={handleTimerComplete}
+          getTime={this.getFormattedTime}
+        />
+        <TouchableHighlight onPress={this.toggleTimer}>
+          <Text style={{ fontSize: 45 }}>
+            {!this.state.timerStart ? 'Start' : 'Stop'}
+          </Text>
+        </TouchableHighlight>
       </View>
     );
   }
 }
+
+
+const options = {
+  container: {
+    backgroundColor: '#42A5F5',
+    padding: 10,
+    borderRadius: 5,
+    width: 220,
+    marginBottom: 40
+  },
+  text: {
+    fontSize: 32,
+    color: '#FFF',
+    marginLeft: 7
+  }
+};
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+    backgroundColor: '#F5FCFF'
+  }
 });
