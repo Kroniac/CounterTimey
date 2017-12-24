@@ -13,6 +13,7 @@ import {
 
 import { Timer } from 'react-native-stopwatch-timer';
 
+let timex = 0;
 export default class App extends Component {
   constructor(props) {
     super(props);
@@ -29,7 +30,10 @@ export default class App extends Component {
   }
 
   toggleTimer() {
-    this.setState({ timerStart: !this.state.timerStart, timerReset: false });
+    if (timex !== 0 || this.state.timerStart) {
+      this.setState({ act: !this.state.act });
+      this.setState({ timerStart: !this.state.timerStart, timerReset: false });
+    } else alert('Set some time please');
   }
 
   resetTimer() {
@@ -39,8 +43,39 @@ export default class App extends Component {
   getFormattedTime(time) {
     this.currentTime = time;
   }
-
+  setTimer = () => {
+    if (this.state.text !== 0) {
+      this.resetTimer();
+      let time = this.state.text * 60000;
+      this.setState({ totalDuration: time });
+    } else alert('Set some time please');
+  };
   render() {
+    let inputBox = this.state.act ? (
+      <TextInput
+        placeholder={'0'}
+        keyboardType={'numeric'}
+        style={{
+          height: 40,
+          width: 200,
+          textAlign: 'center',
+          fontSize: 20,
+          marginBottom: 15
+        }}
+        onChangeText={text => this.setState({ text: text })}
+      />
+    ) : null;
+
+    let button = this.state.act ? (
+      <Button
+        title="Set Timer in Minutes"
+        onPress={this.setTimer}
+        style={{
+          borderRadius: 10,
+          marginBottom: 10
+        }}
+      />
+    ) : null;
     return (
       <View style={styles.container}>
         <Timer
@@ -52,6 +87,8 @@ export default class App extends Component {
           handleFinish={handleTimerComplete}
           getTime={this.getFormattedTime}
         />
+        {inputBox}
+        {button}
         <TouchableHighlight onPress={this.toggleTimer}>
           <Text style={{ fontSize: 45 }}>
             {!this.state.timerStart ? 'Start' : 'Stop'}
@@ -62,6 +99,13 @@ export default class App extends Component {
   }
 }
 
+const handleTimerComplete = () => {
+  reset = () => {
+    this.resetTimer();
+    this.state.text = 0;
+    this.state.totalDuration = 0;
+  };
+};
 
 const options = {
   container: {
@@ -77,7 +121,6 @@ const options = {
     marginLeft: 7
   }
 };
-
 
 const styles = StyleSheet.create({
   container: {
