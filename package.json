@@ -7,8 +7,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "axios": "^0.17.1",
     "react": "16.0.0",
     "react-native": "0.51.0",
+    "react-native-push-notification": "^3.0.2",
     "react-native-stopwatch-timer": "0.0.20"
   },
   "devDependencies": {
