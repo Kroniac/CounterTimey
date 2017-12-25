@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import {
-  AppRegistry,
   StyleSheet,
   Text,
   View,
@@ -10,16 +9,25 @@ import {
   Button,
   AppState
 } from 'react-native';
-
+import axios from 'axios';
 import { Timer } from 'react-native-stopwatch-timer';
+import PushControl from './components/PushControl';
+import BackgroundTimer from 'react-native-background-timer';
+import PushNotification from 'react-native-push-notification';
+import Sound from 'react-native-sound';
+import * as keys from './components/keys/key';
+import audio from './assets/will_full.mp3';
 
 let timex = 0;
+let timerOut;
+let whoosh = new Sound(audio);
+
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       timerStart: false,
-      totalDuration: 9000,
+      totalDuration: 0,
       timerReset: false,
       text: 0,
       act: true
@@ -31,6 +39,46 @@ export default class App extends Component {
 
   toggleTimer() {
     if (timex !== 0 || this.state.timerStart) {
+      if (!this.state.timerStart) {
+        timerOut = BackgroundTimer.setTimeout(() => {
+          let time = [];
+          const location = 'Asia/Kolkata';
+          const key = keys.timeApiKey;
+          axios
+            .get(
+              `http://api.timezonedb.com/v2/get-time-zone?key=${key}&format=json&by=zone&zone=${location}`
+            )
+            .then(response => {
+              time = response.data.formatted.split(' ');
+              PushNotification.localNotification({
+                title: 'Current Internet IST',
+                message: time[1] + ' ' + response.data.abbreviation,
+                color: 'red',
+                vibrate: true,
+                vibration: 10000
+              });
+              if (AppState.currentState === 'active') {
+                alert(time[1] + ' ' + response.data.abbreviation);
+              }
+            });
+          PushNotification.localNotification({
+            title: 'TIMEOUT',
+            message: 'Counter TimerOut',
+            color: 'red',
+            vibrate: true,
+            vibration: 10000
+          });
+          whoosh.play(success => {
+            if (success) {
+              console.log('successfully finished playing');
+            } else {
+              console.log('playback failed due to audio decoding errors');
+            }
+          });
+        }, timex);
+      } else {
+        BackgroundTimer.clearTimeout(timerOut);
+      }
       this.setState({ act: !this.state.act });
       this.setState({ timerStart: !this.state.timerStart, timerReset: false });
     } else alert('Set some time please');
@@ -38,11 +86,14 @@ export default class App extends Component {
 
   resetTimer() {
     this.setState({ timerStart: false, timerReset: true });
+    BackgroundTimer.clearTimeout(timerOut);
   }
 
   getFormattedTime(time) {
     this.currentTime = time;
+    timex = Number(time.split(':').join(''));
   }
+
   setTimer = () => {
     if (this.state.text !== 0) {
       this.resetTimer();
@@ -51,16 +102,17 @@ export default class App extends Component {
     } else alert('Set some time please');
   };
   render() {
-    let inputBox = this.state.act ? (
+    let timeInput = this.state.act ? (
       <TextInput
-        placeholder={'0'}
+        placeholder={'Enter Time In Minutes'}
         keyboardType={'numeric'}
         style={{
           height: 40,
-          width: 200,
+          width: 250,
           textAlign: 'center',
           fontSize: 20,
-          marginBottom: 15
+          marginBottom: 15,
+          padding: 10
         }}
         onChangeText={text => this.setState({ text: text })}
       />
@@ -69,6 +121,7 @@ export default class App extends Component {
     let button = this.state.act ? (
       <Button
         title="Set Timer in Minutes"
+        color="#42A5F5"
         onPress={this.setTimer}
         style={{
           borderRadius: 10,
@@ -87,7 +140,7 @@ export default class App extends Component {
           handleFinish={handleTimerComplete}
           getTime={this.getFormattedTime}
         />
-        {inputBox}
+        {timeInput}
         {button}
         <TouchableHighlight onPress={this.toggleTimer}>
           <Text style={{ fontSize: 45 }}>
@@ -110,9 +163,9 @@ const handleTimerComplete = () => {
 const options = {
   container: {
     backgroundColor: '#42A5F5',
-    padding: 10,
+    padding: 20,
     borderRadius: 5,
-    width: 220,
+    width: 250,
     marginBottom: 40
   },
   text: {
