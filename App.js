@@ -60,6 +60,15 @@ export default class App extends Component {
               if (AppState.currentState === 'active') {
                 alert(time[1] + ' ' + response.data.abbreviation);
               }
+            })
+            .catch(e => {
+              PushNotification.localNotification({
+                title: "Couldn't fetch Current IST",
+                message: e.toString(),
+                color: 'red',
+                vibrate: true,
+                vibration: 10000
+              });
             });
           PushNotification.localNotification({
             title: 'TIMEOUT',
