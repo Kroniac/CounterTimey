@@ -37,6 +37,7 @@ export default class App extends Component {
     this.resetTimer = this.resetTimer.bind(this);
   }
 
+  //function to toggle state for start and stop
   toggleTimer() {
     if (timex !== 0 || this.state.timerStart) {
       if (!this.state.timerStart) {
@@ -44,11 +45,13 @@ export default class App extends Component {
           let time = [];
           const location = 'Asia/Kolkata';
           const key = keys.timeApiKey;
+          //get request to get IST time from TimezoneDB API
           axios
             .get(
               `http://api.timezonedb.com/v2/get-time-zone?key=${key}&format=json&by=zone&zone=${location}`
             )
             .then(response => {
+              //if success then display time
               time = response.data.formatted.split(' ');
               PushNotification.localNotification({
                 title: 'Current Internet IST',
@@ -62,6 +65,7 @@ export default class App extends Component {
               }
             })
             .catch(e => {
+              //if not found show error message
               PushNotification.localNotification({
                 title: "Couldn't fetch Current IST",
                 message: e.toString(),
@@ -70,6 +74,7 @@ export default class App extends Component {
                 vibration: 10000
               });
             });
+          //push notification for indicating timeout
           PushNotification.localNotification({
             title: 'TIMEOUT',
             message: 'Counter TimerOut',
@@ -77,6 +82,7 @@ export default class App extends Component {
             vibrate: true,
             vibration: 10000
           });
+          //to play sound
           whoosh.play(success => {
             if (success) {
               console.log('successfully finished playing');
@@ -86,23 +92,28 @@ export default class App extends Component {
           });
         }, timex);
       } else {
+        //if clicked stop to clear bacgroundTimer
         BackgroundTimer.clearTimeout(timerOut);
       }
+      //altering state for START and STOP
       this.setState({ act: !this.state.act });
       this.setState({ timerStart: !this.state.timerStart, timerReset: false });
-    } else alert('Set some time please');
+    } else alert('Set some time please'); //if time is 0 on the clock
   }
 
+  //to reset the timer values to default
   resetTimer() {
     this.setState({ timerStart: false, timerReset: true });
     BackgroundTimer.clearTimeout(timerOut);
   }
 
+  //to get the current time on the Timer
   getFormattedTime(time) {
     this.currentTime = time;
     timex = Number(time.split(':').join(''));
   }
 
+  //setting up the Timer with totalDuration set from the inputBox
   setTimer = () => {
     if (this.state.text !== 0) {
       this.resetTimer();
@@ -110,6 +121,8 @@ export default class App extends Component {
       this.setState({ totalDuration: time });
     } else alert('Set some time please');
   };
+
+  //rendering components
   render() {
     let timeInput = this.state.act ? (
       <TextInput
@@ -161,7 +174,9 @@ export default class App extends Component {
   }
 }
 
+//function to execute after timer completes
 const handleTimerComplete = () => {
+  //resetting the state properties for Timer
   reset = () => {
     this.resetTimer();
     this.state.text = 0;
@@ -169,6 +184,7 @@ const handleTimerComplete = () => {
   };
 };
 
+//styling for the Timer
 const options = {
   container: {
     backgroundColor: '#42A5F5',
@@ -184,6 +200,7 @@ const options = {
   }
 };
 
+//Whole Container Styling
 const styles = StyleSheet.create({
   container: {
     flex: 1,
