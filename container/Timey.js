@@ -13,6 +13,7 @@ import * as keys from '../components/keys/key';
 import audio from '../assets/will_full.mp3';
 
 let timex = 0;
+//key for backgroundTimer
 let timerOut;
 let whoosh = new Sound(audio);
 
@@ -77,13 +78,7 @@ class Timey extends Component {
             vibration: 10000
           });
           //to play sound
-          whoosh.play(success => {
-            if (success) {
-              console.log('successfully finished playing');
-            } else {
-              console.log('playback failed due to audio decoding errors');
-            }
-          });
+          whoosh.play();
         }, timex);
       } else {
         //if clicked stop to clear bacgroundTimer
