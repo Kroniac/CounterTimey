@@ -12,6 +12,7 @@ import Sound from 'react-native-sound';
 import * as keys from '../components/keys/key';
 import audio from '../assets/will_full.mp3';
 
+//timer current time
 let timex = 0;
 //key for backgroundTimer
 let timerOut;
@@ -85,14 +86,24 @@ class Timey extends Component {
         BackgroundTimer.clearTimeout(timerOut);
       }
       //altering state for START and STOP
-      this.setState({ act: !this.state.act });
-      this.setState({ timerStart: !this.state.timerStart, timerReset: false });
+      this.setState(previousState => {
+        return { ...previousState, act: !this.state.act };
+      });
+      this.setState(previousState => {
+        return {
+          ...previousState,
+          timerStart: !this.state.timerStart,
+          timerReset: false
+        };
+      });
     } else alert('Set some time please'); //if time is 0 on the clock
   }
 
   //to reset the timer values to default
   resetTimer() {
-    this.setState({ timerStart: false, timerReset: true });
+    this.setState(previousState => {
+      return { ...previousState, timerStart: false, timerReset: true };
+    });
     BackgroundTimer.clearTimeout(timerOut);
   }
 
@@ -107,7 +118,9 @@ class Timey extends Component {
     if (this.state.text > 0) {
       this.resetTimer();
       let time = this.state.text * 60000;
-      this.setState({ totalDuration: time });
+      this.setState(previousState => {
+        return { ...previousState, totalDuration: time };
+      });
     } else if (this.state.text < 0) alert('Set a positive time');
     else alert('Set some time please');
   };
@@ -115,7 +128,13 @@ class Timey extends Component {
   //rendering components
   render() {
     let timeInput = this.state.act ? (
-      <Input textChanged={text => this.setState({ text: text })} />
+      <Input
+        textChanged={text =>
+          this.setState(previousState => {
+            return { ...previousState, text: text };
+          })
+        }
+      />
     ) : null;
 
     let button = this.state.act ? <Btn setTimer={this.setTimer} /> : null;
@@ -146,8 +165,10 @@ const handleTimerComplete = () => {
   //resetting the state properties for Timer
   reset = () => {
     this.resetTimer();
-    this.state.text = 0;
-    this.state.totalDuration = 0;
+
+    this.setState(previousState => {
+      return { ...previousState, text: 0, totalDuration: 0 };
+    });
   };
 };
 
