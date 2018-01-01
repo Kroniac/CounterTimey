@@ -4,7 +4,6 @@ import Btn from '../components/Button/ButtonT';
 import Input from '../components/Textinput/Input';
 import TouchableHighlightT from '../components/TouchableHighlight/TouchableHighlightT';
 import axios from 'axios';
-import { Timer } from 'react-native-stopwatch-timer';
 import PushControl from '../components/PushControl';
 import BackgroundTimer from 'react-native-background-timer';
 import PushNotification from 'react-native-push-notification';
@@ -12,181 +11,137 @@ import Sound from 'react-native-sound';
 import * as keys from '../components/keys/key';
 import audio from '../assets/will_full.mp3';
 
-//timer current time
-let timex = 0;
-//key for backgroundTimer
-let timerOut;
+// //timer current time
+// let timex = 0;
+// //key for backgroundTimer
+// let timerOut;
+let intervalId;
 let whoosh = new Sound(audio);
 
 class Timey extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      timerStart: false,
-      totalDuration: 0,
-      timerReset: false,
-      text: 0,
-      act: true
-    };
-
-    this.toggleTimer = this.toggleTimer.bind(this);
-    this.resetTimer = this.resetTimer.bind(this);
-  }
-
-  //function to toggle state for start and stop
-  toggleTimer() {
-    if (timex !== 0 || this.state.timerStart) {
-      if (!this.state.timerStart) {
-        timerOut = BackgroundTimer.setTimeout(() => {
-          let time = [];
-          const location = 'Asia/Kolkata';
-          const key = keys.timeApiKey;
-          //get request to get IST time from TimezoneDB API
-          axios
-            .get(
-              `http://api.timezonedb.com/v2/get-time-zone?key=${key}&format=json&by=zone&zone=${location}`
-            )
-            .then(response => {
-              //if success then display time
-              time = response.data.formatted.split(' ');
-              PushNotification.localNotification({
-                title: 'Current Internet IST',
-                message: time[1] + ' ' + response.data.abbreviation,
-                color: 'red',
-                vibrate: true,
-                vibration: 10000
-              });
-              if (AppState.currentState === 'active') {
-                alert(time[1] + ' ' + response.data.abbreviation);
-              }
-            })
-            .catch(e => {
-              //if not found show error message
-              PushNotification.localNotification({
-                title: "Couldn't fetch Current IST",
-                message: e.toString(),
-                color: 'red',
-                vibrate: true,
-                vibration: 10000
-              });
-            });
-          //push notification for indicating timeout
-          PushNotification.localNotification({
-            title: 'TIMEOUT',
-            message: 'Counter TimerOut',
-            color: 'red',
-            vibrate: true,
-            vibration: 10000
-          });
-          //to play sound
-          whoosh.play();
-        }, timex);
-      } else {
-        //if clicked stop to clear bacgroundTimer
-        BackgroundTimer.clearTimeout(timerOut);
-      }
-      //altering state for START and STOP
-      this.setState(previousState => {
-        return { ...previousState, act: !this.state.act };
-      });
-      this.setState(previousState => {
-        return {
-          ...previousState,
-          timerStart: !this.state.timerStart,
-          timerReset: false
-        };
-      });
-    } else alert('Set some time please'); //if time is 0 on the clock
-  }
-
-  //to reset the timer values to default
-  resetTimer() {
-    this.setState(previousState => {
-      return { ...previousState, timerStart: false, timerReset: true };
-    });
-    BackgroundTimer.clearTimeout(timerOut);
-  }
-
-  //to get the current time on the Timer
-  getFormattedTime(time) {
-    this.currentTime = time;
-    timex = Number(time.split(':').join(''));
-  }
-
-  //setting up the Timer with totalDuration set from the inputBox
-  setTimer = () => {
-    if (this.state.text > 0) {
-      this.resetTimer();
-      let time = this.state.text * 60000;
-      this.setState(previousState => {
-        return { ...previousState, totalDuration: time };
-      });
-    } else if (this.state.text < 0) alert('Set a positive time');
-    else alert('Set some time please');
+  state = {
+    displayTime: '0d 0h 0m 0s',
+    remTime: 0,
+    inputTime: 0,
+    showStartButton: true
   };
 
+  setTimer = () => {
+    let time = this.state.inputTime;
+    if (time > 0) {
+      time = time * 60000;
+      let days = Math.floor(time / (1000 * 60 * 60 * 24));
+      let hours = Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      let minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+      let seconds = Math.floor((time % (1000 * 60)) / 1000);
+      let displayTime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      this.setState({ displayTime: displayTime, remTime: time });
+    } else alert('Set Correct Time');
+  };
+
+  startTimer = () => {
+    if (this.state.remTime > 0) {
+      this.setState({ showStartButton: false });
+      // Start a timer that runs continuous after X milliseconds
+      intervalId = BackgroundTimer.setInterval(() => {
+        let time = this.state.remTime - 1000;
+        let days = Math.floor(time / (1000 * 60 * 60 * 24));
+        let hours = Math.floor(
+          (time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        let minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((time % (1000 * 60)) / 1000);
+        let displayTime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        this.setState({ displayTime: displayTime, remTime: time });
+        if (time < 0) {
+          BackgroundTimer.clearInterval(intervalId);
+          this.setState({
+            showStartButton: true,
+            displayTime: '0d 0h 0m 0s',
+            remTime: 0
+          });
+          this.notify();
+        }
+      }, 1000);
+    } else alert('Set Some Time Please To start');
+  };
+
+  stopTimer = () => {
+    BackgroundTimer.clearInterval(intervalId);
+    this.setState({
+      showStartButton: true
+    });
+  };
+  notify = () => {
+    let time = [];
+    const location = 'Asia/Kolkata';
+    const key = keys.timeApiKey;
+    //get request to get IST time from TimezoneDB API
+    axios
+      .get(
+        `http://api.timezonedb.com/v2/get-time-zone?key=${key}&format=json&by=zone&zone=${location}`
+      )
+      .then(response => {
+        //if success then display time
+        time = response.data.formatted.split(' ');
+        PushNotification.localNotification({
+          title: 'Current Internet IST',
+          message: time[1] + ' ' + response.data.abbreviation,
+          color: 'red',
+          vibrate: true,
+          vibration: 10000
+        });
+        if (AppState.currentState === 'active') {
+          alert(time[1] + ' ' + response.data.abbreviation);
+        }
+      })
+      .catch(e => {
+        //if not found show error message
+        PushNotification.localNotification({
+          title: "Couldn't fetch Current IST",
+          message: e.toString(),
+          color: 'red',
+          vibrate: true,
+          vibration: 10000
+        });
+      });
+    //push notification for indicating timeout
+    PushNotification.localNotification({
+      title: 'TIMEOUT',
+      message: 'Counter TimerOut',
+      color: 'red',
+      vibrate: true,
+      vibration: 10000
+    });
+    //to play sound
+    whoosh.play();
+  };
   //rendering components
   render() {
-    let timeInput = this.state.act ? (
-      <Input
-        textChanged={text =>
-          this.setState(previousState => {
-            return { ...previousState, text: text };
-          })
-        }
-      />
+    let button = this.state.showStartButton ? (
+      <Btn setTimer={this.startTimer} title="START TIMER" />
+    ) : (
+      <Btn setTimer={this.stopTimer} title="PAUSE TIMER" />
+    );
+    let setTimer = this.state.showStartButton ? (
+      <Btn setTimer={this.setTimer} title="SET TIMER" />
     ) : null;
-
-    let button = this.state.act ? <Btn setTimer={this.setTimer} /> : null;
     return (
       <View style={styles.container}>
-        <Timer
-          totalDuration={this.state.totalDuration}
-          msecs
-          start={this.state.timerStart}
-          reset={this.state.timerReset}
-          options={options}
-          handleFinish={handleTimerComplete}
-          getTime={this.getFormattedTime}
+        <Text style={styles.titleText}>{this.state.displayTime}</Text>
+        <Input
+          textChanged={inputTime =>
+            this.setState(previousState => {
+              return { ...previousState, inputTime: inputTime };
+            })
+          }
         />
-        {timeInput}
+        {setTimer}
         {button}
-        <TouchableHighlightT
-          toggleTimer={this.toggleTimer}
-          timeStart={!this.state.timerStart ? 'Start' : 'Stop'}
-        />
       </View>
     );
   }
 }
-
-//function to execute after timer completes
-const handleTimerComplete = () => {
-  //resetting the state properties for Timer
-  reset = () => {
-    this.resetTimer();
-
-    this.setState(previousState => {
-      return { ...previousState, text: 0, totalDuration: 0 };
-    });
-  };
-};
-
-//styling for the Timer
-const options = {
-  container: {
-    backgroundColor: '#42A5F5',
-    padding: 20,
-    borderRadius: 5,
-    width: 250,
-    marginBottom: 40
-  },
-  text: {
-    fontSize: 32,
-    color: '#FFF',
-    marginLeft: 7
-  }
-};
 
 //Whole Container Styling
 const styles = StyleSheet.create({
@@ -195,6 +150,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF'
+  },
+  titleText: {
+    fontSize: 20,
+    fontWeight: 'bold'
   }
 });
 
