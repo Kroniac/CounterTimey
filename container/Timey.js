@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, View, AppState } from 'react-native';
 import Btn from '../components/Button/ButtonT';
 import Input from '../components/Textinput/Input';
-import TouchableHighlightT from '../components/TouchableHighlight/TouchableHighlightT';
 import axios from 'axios';
 import PushControl from '../components/PushControl';
 import BackgroundTimer from 'react-native-background-timer';
@@ -11,10 +10,7 @@ import Sound from 'react-native-sound';
 import * as keys from '../components/keys/key';
 import audio from '../assets/will_full.mp3';
 
-// //timer current time
-// let timex = 0;
-// //key for backgroundTimer
-// let timerOut;
+//id for background task
 let intervalId;
 let whoosh = new Sound(audio);
 
@@ -26,6 +22,7 @@ class Timey extends Component {
     showStartButton: true
   };
 
+  //to set time on the clock
   setTimer = () => {
     let time = this.state.inputTime;
     if (time > 0) {
@@ -39,6 +36,7 @@ class Timey extends Component {
     } else alert('Set Correct Time');
   };
 
+  //to start the timer
   startTimer = () => {
     if (this.state.remTime > 0) {
       this.setState({ showStartButton: false });
@@ -66,12 +64,15 @@ class Timey extends Component {
     } else alert('Set Some Time Please To start');
   };
 
+  //to stop or pause the timer
   stopTimer = () => {
     BackgroundTimer.clearInterval(intervalId);
     this.setState({
       showStartButton: true
     });
   };
+
+  //to show nofication at timer completed
   notify = () => {
     let time = [];
     const location = 'Asia/Kolkata';
