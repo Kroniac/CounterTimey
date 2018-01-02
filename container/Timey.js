@@ -27,11 +27,7 @@ class Timey extends Component {
     let time = this.state.inputTime;
     if (time > 0) {
       time = time * 60000;
-      let days = Math.floor(time / (1000 * 60 * 60 * 24));
-      let hours = Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      let minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
-      let seconds = Math.floor((time % (1000 * 60)) / 1000);
-      let displayTime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      let displayTime = this.getTime(time);
       this.setState({ displayTime: displayTime, remTime: time });
     } else alert('Set Correct Time');
   };
@@ -43,13 +39,7 @@ class Timey extends Component {
       // Start a timer that runs continuous after X milliseconds
       intervalId = BackgroundTimer.setInterval(() => {
         let time = this.state.remTime - 1000;
-        let days = Math.floor(time / (1000 * 60 * 60 * 24));
-        let hours = Math.floor(
-          (time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        );
-        let minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
-        let seconds = Math.floor((time % (1000 * 60)) / 1000);
-        let displayTime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        let displayTime = this.getTime(time);
         this.setState({ displayTime: displayTime, remTime: time });
         if (time < 0) {
           BackgroundTimer.clearInterval(intervalId);
@@ -70,6 +60,15 @@ class Timey extends Component {
     this.setState({
       showStartButton: true
     });
+  };
+
+  //function to return time in day hours minutus and seconds format
+  getTime = time => {
+    let days = Math.floor(time / (1000 * 60 * 60 * 24));
+    let hours = Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    let minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+    let seconds = Math.floor((time % (1000 * 60)) / 1000);
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
   //to show nofication at timer completed
