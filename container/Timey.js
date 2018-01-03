@@ -82,29 +82,46 @@ class Timey extends Component {
         `http://api.timezonedb.com/v2/get-time-zone?key=${key}&format=json&by=zone&zone=${location}`
       )
       .then(response => {
-        //if success then display time
-        time = response.data.formatted.split(' ');
-        PushNotification.localNotification({
-          title: 'Current Internet IST',
-          message: time[1] + ' ' + response.data.abbreviation,
-          color: 'red',
-          vibrate: true,
-          vibration: 10000
-        });
-        if (AppState.currentState === 'active') {
-          alert(time[1] + ' ' + response.data.abbreviation);
-        }
+        this.timeNofity(response);
       })
       .catch(e => {
-        //if not found show error message
-        PushNotification.localNotification({
-          title: "Couldn't fetch Current IST",
-          message: e.toString(),
-          color: 'red',
-          vibrate: true,
-          vibration: 10000
-        });
+        this.errorTimeOut(e);
       });
+    this.timeOutNotify();
+    //to play sound
+    whoosh.play();
+  };
+
+  //error during time fetch
+  errorTimeOut = e => {
+    //if not found show error message
+    PushNotification.localNotification({
+      title: "Couldn't fetch Current IST",
+      message: e.toString(),
+      color: 'red',
+      vibrate: true,
+      vibration: 10000
+    });
+  };
+
+  // notify IST time
+  timeNofity = response => {
+    //if success then display time
+    time = response.data.formatted.split(' ');
+    PushNotification.localNotification({
+      title: 'Current Internet IST',
+      message: time[1] + ' ' + response.data.abbreviation,
+      color: 'red',
+      vibrate: true,
+      vibration: 10000
+    });
+    if (AppState.currentState === 'active') {
+      alert(time[1] + ' ' + response.data.abbreviation);
+    }
+  };
+
+  //notify timeOut
+  timeOutNotify = () => {
     //push notification for indicating timeout
     PushNotification.localNotification({
       title: 'TIMEOUT',
@@ -113,9 +130,8 @@ class Timey extends Component {
       vibrate: true,
       vibration: 10000
     });
-    //to play sound
-    whoosh.play();
   };
+
   //rendering components
   render() {
     let button = this.state.showStartButton ? (
